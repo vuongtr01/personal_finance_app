@@ -1,0 +1,24 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: transaction-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/transaction_db
+    username: finance
+    password: finance123
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+
+jwt:
+  secret: my-super-secret-key-for-jwt-tokens-that-is-at-least-256-bits-long
+  expiration-ms: 86400000
+
+budget:
+  service:
+    url: http://localhost:8082

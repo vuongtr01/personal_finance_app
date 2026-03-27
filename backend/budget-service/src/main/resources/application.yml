@@ -1,0 +1,20 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: budget-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/budget_db
+    username: finance
+    password: finance123
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+
+jwt:
+  secret: my-super-secret-key-for-jwt-tokens-that-is-at-least-256-bits-long
+  expiration-ms: 86400000
