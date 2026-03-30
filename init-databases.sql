@@ -1,3 +1,3 @@
-CREATE DATABASE user_db;
-CREATE DATABASE budget_db;
-CREATE DATABASE transaction_db;
+-- All services share the single 'finance' database created by POSTGRES_DB.
+-- This file is kept for documentation purposes only.
+-- No additional databases need to be created.

@@ -7,7 +7,7 @@ A microservices-based personal finance application that lets users allocate inco
 ### Tech Stack
 - **Frontend:** React 18 + TypeScript, Vite, Tailwind CSS, Zustand, Recharts
 - **Backend:** Java 17, Spring Boot 3, Spring Cloud Gateway
-- **Database:** PostgreSQL 16 (one instance, three logical databases)
+- **Database:** PostgreSQL 16 (single shared database `finance`)
 - **Infrastructure:** Docker Compose
 
 ---
@@ -35,11 +35,13 @@ A microservices-based personal finance application that lets users allocate inco
            │ - JWT issuing │      │ - Transfers    │      │ - Spending history│
            └───────┬───────┘      └───────┬────────┘      └────────┬──────────┘
                    │                      │                         │
-                   ▼                      ▼                         ▼
-            ┌──────────┐          ┌───────────┐            ┌──────────────┐
-            │ user_db  │          │ budget_db │            │transaction_db│
-            └──────────┘          └───────────┘            └──────────────┘
-                         PostgreSQL 16 (Docker)
+                   └──────────────────────┼─────────────────────────┘
+                                          ▼
+                                 ┌─────────────────┐
+                                 │   finance (DB)   │
+                                 │  PostgreSQL 16   │
+                                 │    (Docker)      │
+                                 └─────────────────┘
 ```
 
 ### Inter-Service Communication
@@ -51,7 +53,9 @@ A microservices-based personal finance application that lets users allocate inco
 
 ## 3. Database Schema
 
-### 3.1 User Service — `user_db`
+All tables reside in a single `finance` database. Each service manages its own tables via Flyway with a per-service history table (`flyway_schema_history_user`, `flyway_schema_history_budget`, `flyway_schema_history_transaction`).
+
+### 3.1 User Service
 
 ```sql
 CREATE TABLE users (
@@ -64,7 +68,7 @@ CREATE TABLE users (
 );
 ```
 
-### 3.2 Budget Service — `budget_db`
+### 3.2 Budget Service
 
 ```sql
 CREATE TABLE budget_categories (
@@ -101,7 +105,7 @@ CREATE TABLE category_transfers (
 
 **Balance calculation:** `remaining = allocated_amount - spent_amount` (stored directly on `budget_categories` to avoid expensive joins; updated atomically with `@Transactional`).
 
-### 3.3 Transaction Service — `transaction_db`
+### 3.3 Transaction Service
 
 ```sql
 CREATE TABLE transactions (
@@ -231,8 +235,8 @@ src/
 ```
 personal_finance_app/
 ├── design/                     # This document
-├── docker-compose.yml          # PostgreSQL container (3 databases)
-├── init-databases.sql          # CREATE DATABASE statements
+├── docker-compose.yml          # PostgreSQL container (single finance database)
+├── init-databases.sql          # Retained for documentation (no-op)
 ├── backend/
 │   ├── settings.gradle         # Multi-project build config
 │   ├── build.gradle            # Root: shared dependency versions
@@ -282,13 +286,13 @@ personal_finance_app/
 1. Initialize git repository with `.gitignore`
 2. Create monorepo folder structure (backend + frontend directories)
 3. Write `docker-compose.yml` — single PostgreSQL 16 container with volume persistence
-4. Write `init-databases.sql` — creates `user_db`, `budget_db`, `transaction_db`
+4. Configure single `finance` database (created automatically by `POSTGRES_DB` in Docker Compose)
 5. Create Gradle multi-project build:
    - `backend/settings.gradle` — includes all 5 subprojects
    - `backend/build.gradle` — shared Spring Boot 3.2+ and dependency versions
    - Individual `build.gradle` per service with specific dependencies
 6. Generate Spring Boot application classes for each service
-7. Configure `application.yml` per service (DB connection, server port, JWT secret)
+7. Configure `application.yml` per service (shared DB connection to `finance`, server port, JWT secret, per-service Flyway history table)
 8. Add Flyway migrations for each service's schema
 9. Scaffold React app with `npm create vite@latest` (React + TypeScript template)
 10. Install frontend dependencies: tailwindcss, react-router-dom, zustand, axios, recharts

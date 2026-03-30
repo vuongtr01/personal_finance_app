@@ -5,7 +5,7 @@ spring:
   application:
     name: user-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/user_db
+    url: jdbc:postgresql://localhost:5432/finance
     username: finance
     password: finance123
   jpa:
@@ -14,6 +14,7 @@ spring:
     show-sql: false
   flyway:
     enabled: true
+    table: flyway_schema_history_user
 
 jwt:
   secret: my-super-secret-key-for-jwt-tokens-that-is-at-least-256-bits-long
